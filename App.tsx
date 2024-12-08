@@ -265,6 +265,7 @@ const App = () => {
       top: isPortrait ? '35%' : '9%',
       alignItems: 'center',
       justifyContent: 'center',
+      width: '100%',
     },
     timerText: {
       color: theme.text,
@@ -279,10 +280,12 @@ const App = () => {
       }),
       opacity: 0.65,
       includeFontPadding: false,
+      textAlign: 'center',
       letterSpacing: 4,
       textShadowColor: `${theme.text}10`,
       textShadowOffset: {width: 0, height: 0},
       textShadowRadius: 10,
+      minWidth: isPortrait ? 320 : 400,
     },
     startButton: {
       position: 'absolute',
@@ -651,9 +654,9 @@ const App = () => {
               )}
               <TouchableOpacity onPress={handleTimerPress}>
                 {isEditing ? (
-                  <View style={styles.editContainer}>
+                  <View style={[styles.editContainer, {minWidth: isPortrait ? 320 : 400}]}>
                     <TextInput
-                      style={dynamicStyles.timerText}
+                      style={[dynamicStyles.timerText, {textAlign: 'center'}]}
                       keyboardType="number-pad"
                       value={inputMinutes}
                       onChangeText={setInputMinutes}
@@ -663,7 +666,7 @@ const App = () => {
                       autoFocus
                       selectTextOnFocus
                     />
-                    <Text style={styles.minuteText}>dakika</Text>
+                    <Text style={[styles.minuteText, {textAlign: 'center'}]}>dakika</Text>
                   </View>
                 ) : (
                   <Text style={dynamicStyles.timerText}>{formatTime(timeLeft)}</Text>
@@ -684,7 +687,12 @@ const App = () => {
   // Saat ekranını render et
   const renderClockOnlyMode = () => (
     <View style={[styles.clockOnlyContainer, {backgroundColor: theme.background}]}>
-      <StatusBar hidden={true} />
+      <StatusBar 
+        hidden={true} 
+        backgroundColor="transparent"
+        translucent={true}
+        barStyle={isDarkTheme ? "light-content" : "dark-content"}
+      />
       <View style={[styles.clockOnlyContent]}>
         <Text style={[styles.clockOnlyText, {
           color: theme.text,
@@ -721,7 +729,7 @@ const App = () => {
       <StatusBar 
         barStyle={isDarkTheme ? "light-content" : "dark-content"} 
         backgroundColor="transparent"
-        translucent={isClockOnlyMode || isRunning}
+        translucent={true}
         hidden={isClockOnlyMode || isRunning} 
       />
       
@@ -820,6 +828,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: '#000000',
   },
   menuButton: {
     position: 'absolute',
@@ -1219,6 +1228,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#000000',
   },
   clockOnlyContent: {
     flexDirection: 'row',
