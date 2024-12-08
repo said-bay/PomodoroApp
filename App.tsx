@@ -663,6 +663,7 @@ const App = () => {
   // Saat ekranını render et
   const renderClockOnlyMode = () => (
     <View style={[styles.clockOnlyContainer, {backgroundColor: theme.background}]}>
+      <StatusBar hidden={true} />
       <View style={[styles.clockOnlyContent]}>
         <Text style={[styles.clockOnlyText, {
           color: theme.text,
@@ -698,8 +699,9 @@ const App = () => {
     <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}>
       <StatusBar 
         barStyle={isDarkTheme ? "light-content" : "dark-content"} 
-        backgroundColor={theme.background}
-        hidden={isClockOnlyMode} 
+        backgroundColor="transparent"
+        translucent={isClockOnlyMode || isRunning}
+        hidden={isClockOnlyMode || isRunning} 
       />
       
       {showFinished ? (
