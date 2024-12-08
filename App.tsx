@@ -19,6 +19,7 @@ import {
   Platform,
   Dimensions,
   Animated,
+  BackHandler,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -114,8 +115,10 @@ const App = () => {
   const loadClockOnlyModePreference = async () => {
     try {
       const savedMode = await AsyncStorage.getItem('clockOnlyMode');
+      // Eğer daha önce kaydedilmiş bir değer yoksa, normal modda başla
       if (savedMode !== null) {
-        setIsClockOnlyMode(savedMode === 'true');
+        setIsClockOnlyMode(false);
+        await AsyncStorage.setItem('clockOnlyMode', 'false');
       }
     } catch (error) {
       console.error('Saat modu tercihi yüklenirken hata:', error);
@@ -237,6 +240,24 @@ const App = () => {
       }, 1500);
     }
   }, [timeLeft, inputMinutes]);
+
+  // Geri tuşu işlevselliği için useEffect ekle
+  useEffect(() => {
+    const backAction = () => {
+      if (currentScreen !== 'timer' && !showMenu && !showDeleteConfirm && !isClockOnlyMode) {
+        setCurrentScreen('timer');
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [currentScreen, showMenu, showDeleteConfirm, isClockOnlyMode]);
 
   const dynamicStyles = StyleSheet.create({
     timerContainer: {
