@@ -73,6 +73,7 @@ const App = () => {
   const [showColon, setShowColon] = useState(true);
   const [showFinished, setShowFinished] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const [isClockOnlyMode, setIsClockOnlyMode] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
 
   const theme = isDarkTheme ? themes.dark : themes.light;
@@ -92,6 +93,11 @@ const App = () => {
     loadThemePreference();
   }, []);
 
+  // Saat modu tercihini yükle
+  useEffect(() => {
+    loadClockOnlyModePreference();
+  }, []);
+
   // Tema tercihini kaydet
   const loadThemePreference = async () => {
     try {
@@ -104,6 +110,18 @@ const App = () => {
     }
   };
 
+  // Saat modu tercihini kaydet
+  const loadClockOnlyModePreference = async () => {
+    try {
+      const savedMode = await AsyncStorage.getItem('clockOnlyMode');
+      if (savedMode !== null) {
+        setIsClockOnlyMode(savedMode === 'true');
+      }
+    } catch (error) {
+      console.error('Saat modu tercihi yüklenirken hata:', error);
+    }
+  };
+
   // Tema değiştirme fonksiyonu
   const toggleTheme = async () => {
     const newTheme = !isDarkTheme;
@@ -112,6 +130,17 @@ const App = () => {
       await AsyncStorage.setItem('themePreference', newTheme ? 'dark' : 'light');
     } catch (error) {
       console.error('Tema tercihi kaydedilirken hata:', error);
+    }
+  };
+
+  // Saat modunu değiştirme fonksiyonu
+  const toggleClockOnlyMode = async () => {
+    const newMode = !isClockOnlyMode;
+    setIsClockOnlyMode(newMode);
+    try {
+      await AsyncStorage.setItem('clockOnlyMode', newMode.toString());
+    } catch (error) {
+      console.error('Saat modu tercihi kaydedilirken hata:', error);
     }
   };
 
@@ -457,6 +486,14 @@ const App = () => {
                   {isDarkTheme ? 'Koyu' : 'Açık'}
                 </Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.settingItem, {borderBottomColor: theme.border}]}
+                onPress={toggleClockOnlyMode}>
+                <Text style={[styles.settingLabel, {color: theme.text}]}>Sadece Saat Modu</Text>
+                <Text style={[styles.settingValue, {color: theme.textSecondary}]}>
+                  {isClockOnlyMode ? 'Açık' : 'Kapalı'}
+                </Text>
+              </TouchableOpacity>
               <View style={[styles.settingItem, {borderBottomColor: theme.border}]}>
                 <Text style={[styles.settingLabel, {color: theme.text}]}>Sürüm</Text>
                 <Text style={[styles.settingValue, {color: theme.textSecondary}]}>1.0.0</Text>
@@ -623,9 +660,47 @@ const App = () => {
     }
   };
 
+  // Saat ekranını render et
+  const renderClockOnlyMode = () => (
+    <View style={[styles.clockOnlyContainer, {backgroundColor: theme.background}]}>
+      <View style={[styles.clockOnlyContent]}>
+        <Text style={[styles.clockOnlyText, {
+          color: theme.text,
+          fontSize: isPortrait ? 156 : 256,
+        }]}>
+          {currentTime.getHours().toString().padStart(2, '0')}
+        </Text>
+        <Text style={[styles.clockOnlyText, {
+          color: theme.text,
+          opacity: showColon ? 1 : 0,
+          fontSize: isPortrait ? 156 : 256,
+        }]}>:</Text>
+        <Text style={[styles.clockOnlyText, {
+          color: theme.text,
+          fontSize: isPortrait ? 156 : 256,
+        }]}>
+          {currentTime.getMinutes().toString().padStart(2, '0')}
+        </Text>
+      </View>
+      <TouchableOpacity 
+        style={[styles.clockOnlyExitButton, {
+          bottom: isPortrait ? 40 : 20,
+        }]}
+        onPress={() => setIsClockOnlyMode(false)}>
+        <Text style={[styles.clockOnlyExitText, {color: theme.textSecondary}]}>
+          Çıkmak için dokun
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}>
-      <StatusBar barStyle={isDarkTheme ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+      <StatusBar 
+        barStyle={isDarkTheme ? "light-content" : "dark-content"} 
+        backgroundColor={theme.background}
+        hidden={isClockOnlyMode} 
+      />
       
       {showFinished ? (
         <Animated.View style={[styles.finishedContainer, {
@@ -634,6 +709,8 @@ const App = () => {
         }]}>
           <Text style={[styles.finishedText, {color: theme.finishedText}]}>Bitti</Text>
         </Animated.View>
+      ) : isClockOnlyMode ? (
+        renderClockOnlyMode()
       ) : (
         <>
           <TouchableOpacity 
@@ -846,7 +923,6 @@ const styles = StyleSheet.create({
   },
   timerInput: {
     fontSize: 148,
-    color: '#FFFFFF',
     fontWeight: Platform.select({
       ios: '100',
       android: '100',
@@ -861,9 +937,6 @@ const styles = StyleSheet.create({
     opacity: 0.65,
     includeFontPadding: false,
     letterSpacing: 4,
-    textShadowColor: 'rgba(255, 255, 255, 0.1)',
-    textShadowOffset: {width: 0, height: 0},
-    textShadowRadius: 10,
   },
   minuteText: {
     fontSize: 20,
@@ -878,10 +951,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 30,
     borderWidth: 1,
-    borderColor: '#FFFFFF',
   },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '300',
   },
@@ -1120,6 +1191,33 @@ const styles = StyleSheet.create({
   hourText: {
     fontSize: 14,
     fontWeight: '400',
+  },
+  clockOnlyContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clockOnlyContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  clockOnlyText: {
+    fontWeight: '200',
+    letterSpacing: 2,
+    fontFamily: Platform.select({
+      ios: 'Helvetica Neue',
+      android: 'sans-serif-thin',
+    }),
+  },
+  clockOnlyExitButton: {
+    position: 'absolute',
+    bottom: 40,
+    padding: 20,
+  },
+  clockOnlyExitText: {
+    fontSize: 14,
+    fontWeight: '300',
+    opacity: 0.5,
   },
 });
 
